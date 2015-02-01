@@ -2,7 +2,6 @@ module Cido.Resources.User (resource) where
 
 import Control.Monad.Reader (ReaderT)
 import Control.Monad.Trans  (lift)
-import Data.UUID            (UUID)
 
 import Rest
 import qualified Rest.Resource   as R
@@ -10,16 +9,17 @@ import qualified Rest.Resource   as R
 import Cido.Types.Server
 import qualified Cido.Queries    as Q
 
-data UserID = ByID UUID
+data UserId = ById Int
 
-type WithUserID = ReaderT UserID APIQuery
+type WithUserId = ReaderT UserId APIQuery
 
-resource :: Resource APIQuery WithUserID UserID () Void
+resource :: Resource APIQuery WithUserId UserId () Void
 resource = mkResourceReader
   { R.name   = "users"
-  , R.schema = withListing () $ named [("id", singleRead ByID )]
+  , R.schema = withListing () $ named [("id", singleRead ById)]
   , R.list   = const listUsers
   }
 
 listUsers :: ListHandler APIQuery
-listUsers = mkListing (jsonO . someO) $ \(Range o l) -> lift (Q.listUsers o l)
+listUsers = mkListing (jsonO . someO) handle where
+    handle (Range o l) = lift (Q.query $ Q.listUsers o l)
