@@ -6,13 +6,11 @@ import Data.Functor              ((<$>))
 import Hasql
 import Hasql.Postgres            (Postgres)
 
-import Rest
-
 import Cido.Types.User
 import Cido.Types.Server
 
-listUsers :: Range -> APIQuery [User]
-listUsers (Range o l) = query $ map userFromRow <$> listEx [stmt|
+listUsers :: Int -> Int -> APIQuery [User]
+listUsers o l = query $ map userFromRow <$> listEx [stmt|
         SELECT id, name, password
         FROM users
         OFFSET $o

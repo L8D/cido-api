@@ -22,4 +22,4 @@ resource = mkResourceReader
   }
 
 listUsers :: ListHandler APIQuery
-listUsers = mkListing (jsonO . someO) (lift . Q.listUsers)
+listUsers = mkListing (jsonO . someO) $ \(Range o l) -> lift (Q.listUsers o l)
