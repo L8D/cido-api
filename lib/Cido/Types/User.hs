@@ -28,3 +28,5 @@ type instance PF User = PFUser
 instance JSONSchema User where schema  = gSchema
 instance FromJSON   User
 instance ToJSON     User
+
+newtype AuthenticatedUser = AuthenticatedUser User

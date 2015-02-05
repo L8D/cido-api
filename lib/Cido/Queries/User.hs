@@ -1,6 +1,8 @@
 {-# LANGUAGE QuasiQuotes, RankNTypes, OverloadedStrings #-}
 
-module Cido.Queries.User (getAllUsers) where
+module Cido.Queries.User ( getAllUsers
+                         , authenticateUser
+                         ) where
 
 import Data.Functor ((<$>))
 import Hasql
@@ -19,3 +21,10 @@ getAllUsers o l = map fromRow <$> listEx [stmt|
 
 fromRow :: (Int, Text) -> User
 fromRow (uid, username) = User uid username
+
+authenticateUser :: User -> Text -> forall s. Query s (Maybe AuthenticatedUser)
+authenticateUser (User uid _) p = fmap authenticate <$> maybeEx [stmt|
+        SELECT id, username
+        FROM users
+        WHERE id = $uid AND crypt($p, password) = password
+    |] where authenticate = AuthenticatedUser . fromRow
