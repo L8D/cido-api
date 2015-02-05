@@ -11,15 +11,15 @@ import qualified Cido.Queries    as Q
 
 data UserId = ById Int
 
-type WithUserId = ReaderT UserId APIQuery
+type WithUserId = ReaderT UserId Api
 
-resource :: Resource APIQuery WithUserId UserId () Void
+resource :: Resource Api WithUserId UserId () Void
 resource = mkResourceReader
   { R.name   = "users"
   , R.schema = withListing () $ named [("id", singleRead ById)]
   , R.list   = const listUsers
   }
 
-listUsers :: ListHandler APIQuery
+listUsers :: ListHandler Api
 listUsers = mkListing (jsonO . someO) handle where
-    handle (Range o l) = lift (Q.query $ Q.listUsers o l)
+    handle (Range o l) = lift (runQuery $ Q.listUsers o l)
