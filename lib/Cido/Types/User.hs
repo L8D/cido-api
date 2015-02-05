@@ -14,13 +14,12 @@ import Data.Typeable
 import GHC.Generics
 import Generics.Regular
 
+type UserId = Int
 type Username = Text
-type Password = Text
 
 data User = User
-  { user_id   :: Int
+  { user_id   :: UserId
   , user_name :: Username
-  , user_pass :: Password
   } deriving (Eq, Generic, Ord, Show, Typeable)
 
 deriveAll ''User "PFUser"
