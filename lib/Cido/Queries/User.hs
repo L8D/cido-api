@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes, RankNTypes, OverloadedStrings #-}
 
-module Cido.Queries where
+module Cido.Queries.User where
 
 import Data.Functor              ((<$>))
 import Hasql
@@ -8,8 +8,8 @@ import Hasql
 import Cido.Types.User
 import Cido.Types.Server
 
-listUsers :: Int -> Int -> forall s. Query s [User]
-listUsers o l = map toUser <$> listEx [stmt|
+getAllUsers :: Int -> Int -> forall s. Query s [User]
+getAllUsers o l = map toUser <$> listEx [stmt|
         SELECT id, username, password
         FROM users
         OFFSET $o

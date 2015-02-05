@@ -18,7 +18,7 @@ library
   exposed-modules:     Cido.Types.Server,
                        Cido.Types.User,
                        Cido.Resources.User,
-                       Cido.Queries
+                       Cido.Queries.User
   build-depends:       base >=4.7 && <4.8,
                        rest-core >=0.34 && <0.35,
                        rest-types >=1.12 && <1.13,

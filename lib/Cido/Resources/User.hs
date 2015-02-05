@@ -7,7 +7,7 @@ import Rest
 import qualified Rest.Resource   as R
 
 import Cido.Types.Server
-import qualified Cido.Queries    as Q
+import Cido.Queries.User
 
 data UserId = ById Int
 
@@ -22,4 +22,4 @@ resource = mkResourceReader
 
 listUsers :: ListHandler Api
 listUsers = mkListing (jsonO . someO) handle where
-    handle (Range o l) = lift (runQuery $ Q.listUsers o l)
+    handle (Range o l) = lift $ runQuery $ getAllUsers o l
