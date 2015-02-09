@@ -24,11 +24,11 @@ resource = mkResourceReader
   }
 
 listUsers :: ListHandler Api
-listUsers = mkListing (jsonO . someO) handler where
+listUsers = mkListing xmlJsonO handler where
     handler (Range o l) = lift $ runQuery $ getAllUsers o l
 
 getUser :: Handler WithUser
-getUser = mkIdHandler (jsonO . someO) handler where
+getUser = mkIdHandler xmlJsonO handler where
     handler :: () -> Identifier -> ErrorT Reason_ WithUser User
     handler _ (ById uid) = do
         r <- lift $ lift $ runQuery $ findUserById uid

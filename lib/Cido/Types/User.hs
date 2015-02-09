@@ -17,6 +17,8 @@ import Data.Text        (Text)
 import Data.Typeable
 import GHC.Generics
 import Generics.Regular
+import Generics.Regular.XmlPickler
+import Text.XML.HXT.Arrow.Pickle
 
 type Id       = Int
 type Username = Text
@@ -31,6 +33,7 @@ newtype AuthenticatedUser = AuthenticatedUser User
 deriveAll ''User "PFUser"
 type instance PF User = PFUser
 
+instance XmlPickler User where xpickle = gxpickle
 instance JSONSchema User where schema  = gSchema
 instance FromJSON   User
 instance ToJSON     User
