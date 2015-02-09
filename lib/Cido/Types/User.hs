@@ -5,7 +5,11 @@
   , TypeFamilies
   #-}
 
-module Cido.Types.User where
+module Cido.Types.User ( User(..)
+                       , Id
+                       , Username
+                       , AuthenticatedUser(..)
+                       ) where
 
 import Data.Aeson
 import Data.JSON.Schema
@@ -14,13 +18,15 @@ import Data.Typeable
 import GHC.Generics
 import Generics.Regular
 
-type UserId = Int
+type Id       = Int
 type Username = Text
 
 data User = User
-  { user_id   :: UserId
-  , user_name :: Username
-  } deriving (Eq, Generic, Ord, Show, Typeable)
+    { id       :: Id
+    , username :: Username
+    } deriving (Eq, Generic, Ord, Show, Typeable)
+
+newtype AuthenticatedUser = AuthenticatedUser User
 
 deriveAll ''User "PFUser"
 type instance PF User = PFUser
@@ -28,5 +34,3 @@ type instance PF User = PFUser
 instance JSONSchema User where schema  = gSchema
 instance FromJSON   User
 instance ToJSON     User
-
-newtype AuthenticatedUser = AuthenticatedUser User

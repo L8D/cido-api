@@ -4,7 +4,7 @@ import Control.Monad.Reader (ReaderT)
 import Control.Monad.Trans  (lift)
 
 import Rest
-import qualified Rest.Resource   as R
+import qualified Rest.Resource as R
 
 import Cido.Types.Server
 import Cido.Queries.User
