@@ -4,10 +4,11 @@ module Cido.Types.Server (Api(..), Query, runQuery) where
 
 import Control.Applicative (Applicative)
 import Control.Monad.Trans (MonadIO)
+import Happstack.Server    (ServerPartT)
 import Hasql
 import Hasql.Postgres      (Postgres)
 
-newtype Api s = Api { unApi :: Session Postgres IO s }
+newtype Api s = Api { unApi :: Session Postgres (ServerPartT IO) s }
     deriving ( Applicative
              , Functor
              , Monad

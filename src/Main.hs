@@ -7,8 +7,8 @@ import Control.Monad.Trans   (liftIO)
 import System.Environment    (getEnv)
 import Data.ByteString.Char8 (pack)
 import Happstack.Server
-import qualified Hasql as H
-import qualified Hasql.Postgres as H
+import Hasql
+import Hasql.Postgres
 
 import Rest.Driver.Happstack (apiToHandler')
 
@@ -18,23 +18,24 @@ import Cido.Types.Server
 conf :: Conf
 conf = Conf 3000 Nothing Nothing 60 Nothing
 
-handle :: H.Pool H.Postgres -> ServerPartT IO Response
-handle pool = apiToHandler' (liftIO . run) api where
-        run a = H.session pool (unApi a) >>= go
-        go (Left  e) = fail $ "session failed: " ++ show e
-        go (Right x) = return x
+handle :: Pool Postgres -> ServerPartT IO Response
+handle pool = apiToHandler' run api where
+    run a = session pool (unApi a) >>= getRidOfTheError
+    getRidOfTheError (Left e) = do
+        liftIO $ putStrLn $ "postgres failure: " ++ show e
+        fail "500 Internal Error" -- omg guys we needz to fix dis
+    getRidOfTheError (Right x) = return x
 
 main :: IO ()
 main = do
-    postgresSettings <- fmap (H.StringSettings . pack) $ getEnv "DATABASE_URL"
+    postgresSettings <- fmap (StringSettings . pack) $ getEnv "DATABASE_URL"
 
-    poolSettings <- maybe (fail "Improper session settings") return $
-                    H.poolSettings 6 30
+    settings <- maybe (fail "improper settings") return (poolSettings 6 30)
 
-    pool :: H.Pool H.Postgres <- H.acquirePool postgresSettings poolSettings
+    pool :: Pool Postgres <- acquirePool postgresSettings settings
 
     tid <- forkIO $ simpleHTTP conf (handle pool)
 
     waitForTermination
-    H.releasePool pool
+    releasePool pool
     killThread tid
