@@ -19,7 +19,7 @@ install:
 
 before_script:
   - psql -c 'create database cido_api;' -U postgres
-  - psql -U postgres api_test < ./db/schema.sql
+  - psql -U postgres cido_api < ./db/schema.sql
 
 script:
  - cabal configure --enable-tests -v2
