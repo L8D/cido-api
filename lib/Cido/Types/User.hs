@@ -1,39 +1,45 @@
 {-# LANGUAGE
-    DeriveDataTypeable
+    TemplateHaskell
+  , GeneralizedNewtypeDeriving
   , DeriveGeneric
-  , TemplateHaskell
-  , TypeFamilies
   #-}
 
-module Cido.Types.User ( User(..)
-                       , Id
-                       , Username
-                       , AuthenticatedUser(..)
-                       ) where
+module Cido.Types.User where
 
-import Data.Aeson
-import Data.JSON.Schema
-import Data.Text        (Text)
-import Data.Typeable
+import Happstack.Server.Internal.Types (FromReqURI(..))
+
 import GHC.Generics
-import Generics.Regular
-import Generics.Regular.XmlPickler
-import Text.XML.HXT.Arrow.Pickle
+import Data.Aeson
+import Text.Read    (readMaybe)
+import Data.Time    (UTCTime)
+import Data.Text    (Text)
+import Data.UUID    (UUID)
+import Util         ()
 
-type Id       = Int
-type Username = Text
+newtype UserId   = UserId   { unUserId   :: UUID }
+    deriving (Show, Eq, Ord, Generic, Read)
+newtype Username = Username { unUsername :: Text }
+    deriving (Show, Eq, Ord, Generic)
+newtype Password = Password { unPassword :: Text }
+    deriving (Show, Eq, Ord, Generic)
+
+instance ToJSON   UserId
+instance FromJSON UserId
+instance ToJSON   Username
+instance FromJSON Username
+instance ToJSON   Password
+instance FromJSON Password
+
+instance FromReqURI UserId where
+    fromReqURI = readMaybe
 
 data User = User
-    { id       :: Id
-    , username :: Username
-    } deriving (Eq, Generic, Ord, Show, Typeable)
+    { id         :: UserId
+    , username   :: Username
+    , password   :: Password
+    , created_at :: UTCTime
+    , updated_at :: UTCTime
+    } deriving (Show, Eq, Ord, Generic)
 
-newtype AuthenticatedUser = AuthenticatedUser User
-
-deriveAll ''User "PFUser"
-type instance PF User = PFUser
-
-instance XmlPickler User where xpickle = gxpickle
-instance JSONSchema User where schema  = gSchema
-instance FromJSON   User
-instance ToJSON     User
+instance FromJSON User
+instance ToJSON   User

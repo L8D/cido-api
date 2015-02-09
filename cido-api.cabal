@@ -15,24 +15,19 @@ source-repository head
 
 library
   ghc-options:         -W -Wall
-  exposed-modules:     Cido.Types.Server,
+  exposed-modules:     Cido.Types,
                        Cido.Types.User,
-                       Cido.Resources.User,
-                       Cido.Queries.User,
                        Cido.Api
   build-depends:       base >=4.7 && <4.8,
-                       rest-core >=0.34 && <0.35,
-                       rest-types >=1.12 && <1.13,
                        hasql >=0.7.2 && <0.7.3,
                        hasql-postgres >=0.10.2 && <0.10.3,
-                       json-schema >=0.7 && < 0.8,
-                       regular >=0.3 && <0.4,
-                       regular-xmlpickler == 0.2,
                        text >=1.2 && <1.3,
                        aeson >=0.8 && <0.9,
                        mtl >=2.1 && <2.2,
-                       happstack-server >= 7.4 && <7.5,
-                       hxt >=9.3 && <9.4
+                       uuid >=1.3.8 && <1.4,
+                       time >=1.4 && <1.5,
+                       bytestring >= 0.10.4 && <0.10.5,
+                       happstack-server >= 7.4 && <7.5
   hs-source-dirs:      lib
   default-language:    Haskell2010
 
@@ -42,11 +37,9 @@ executable cido-server
   build-depends:       base,
                        happstack-server,
                        cido-api,
-                       rest-core,
-                       rest-happstack >= 0.2.10 && <0.2.11,
                        hasql,
                        hasql-postgres,
-                       bytestring >= 0.10.4 && <0.10.5,
+                       bytestring,
                        mtl
   hs-source-dirs:      src
   default-language:    Haskell2010
