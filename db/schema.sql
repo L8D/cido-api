@@ -4,6 +4,7 @@
 
 CREATE EXTENSION pgcrypto;
 CREATE EXTENSION citext;
+CREATE EXTENSION "uuid-ossp";
 
 -- shared stored procedures
 
@@ -14,7 +15,7 @@ CREATE FUNCTION on_record_insert() RETURNS trigger AS $$
     -- the name of the ID sequence for this table
     SELECT TG_ARGV[0] INTO id_sequence;
     -- set the ID as the next sequence value
-    NEW.id         := nextval(id_sequence);
+    NEW.id         := uuid_generate_v4();
     NEW.created_at := now();
     NEW.updated_at := now();
     RETURN NEW;
@@ -35,14 +36,12 @@ $$ LANGUAGE plpgsql;
 -- the User resource
 
 CREATE TABLE users (
-  id           INTEGER    PRIMARY KEY,
-  username     VARCHAR    NOT NULL,
+  id           UUID       PRIMARY KEY,
+  username     VARCHAR    NOT NULL UNIQUE,
   password     VARCHAR    NOT NULL,
   created_at   TIMESTAMP  NOT NULL,
   updated_at   TIMESTAMP  NOT NULL
 );
-
-CREATE SEQUENCE user_ids START 1;
 
 CREATE TRIGGER users_insert
   BEFORE INSERT ON users
