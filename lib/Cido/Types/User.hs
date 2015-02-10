@@ -20,21 +20,20 @@ import Hasql.Backend
 import Util         ()
 
 newtype UserId   = UserId   { unUserId   :: UUID }
-    deriving (Show, Eq, Ord, Generic, Read, CxValue Postgres)
+    deriving
+        (Show, Eq, Ord, Generic, CxValue Postgres, ToJSON, FromJSON)
 newtype Username = Username { unUsername :: Text }
-    deriving (Show, Eq, Ord, Generic, IsString, CxValue Postgres)
+    deriving
+        (Show, Eq, Ord, Generic, IsString, CxValue Postgres, ToJSON, FromJSON)
 newtype Password = Password { unPassword :: Text }
-    deriving (Show, Eq, Ord, Generic, IsString, CxValue Postgres)
-
-instance ToJSON   UserId
-instance FromJSON UserId
-instance ToJSON   Username
-instance FromJSON Username
-instance ToJSON   Password
-instance FromJSON Password
+    deriving
+        (Show, Eq, Ord, Generic, IsString, CxValue Postgres, ToJSON, FromJSON)
 
 instance FromReqURI UserId where
     fromReqURI = readMaybe
+
+instance Read UserId where
+    readsPrec d r = map f (readsPrec d r) where f (i, s) = (UserId i, s)
 
 data User = User
     { id         :: UserId
