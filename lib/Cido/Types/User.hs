@@ -27,13 +27,16 @@ newtype Username = Username { unUsername :: Text }
         (Show, Eq, Ord, Generic, IsString, CxValue Postgres, ToJSON, FromJSON)
 newtype Password = Password { unPassword :: Text }
     deriving
-        (Show, Eq, Ord, Generic, IsString, CxValue Postgres, ToJSON, FromJSON)
+        (Show, Eq, Ord, Generic, IsString, CxValue Postgres, FromJSON)
 
 instance FromReqURI UserId where
     fromReqURI = readMaybe
 
 instance Read UserId where
     readsPrec d r = map f (readsPrec d r) where f (i, s) = (UserId i, s)
+
+instance ToJSON Password where
+    toJSON _ = Null
 
 data User = User
     { id         :: UserId
