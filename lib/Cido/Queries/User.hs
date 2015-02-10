@@ -1,38 +1,35 @@
 {-# LANGUAGE QuasiQuotes, RankNTypes, OverloadedStrings #-}
 
-module Cido.Queries.User ( getAllUsers
-                         , authenticateUser
-                         , findUserById
+module Cido.Queries.User ( findUser
+                         , listUsers
                          ) where
 
-import Data.Functor      ((<$>))
+import Prelude hiding (id)
+import Data.Functor   ((<$>))
+import Data.Time      (UTCTime)
 import Hasql
-import Data.Text         (Text)
+import Hasql.Postgres
 
-import Cido.Types.Server
-import Cido.Types.User   hiding (id, username)
+import Cido.Types.User
 
-getAllUsers :: Int -> Int -> forall s. Query s [User]
-getAllUsers o l = map fromRow <$> listEx [stmt|
-        SELECT id, username
-        FROM users
-        OFFSET $o
-        LIMIT $l
-    |]
+findUser :: UserId -> forall s. Tx Postgres s (Maybe User)
+findUser uid = fmap fromRow <$> maybeEx [stmt|
+    SELECT id, username, password, created_at, updated_at
+    FROM users
+    WHERE id = $uid
+|]
 
-findUserById :: Id -> forall s. Query s (Maybe User)
-findUserById uid = fmap fromRow <$> maybeEx [stmt|
-        SELECT id, username
-        FROM users
-        WHERE id = $uid
-    |]
+fromRow :: (UserId, Username, Password, UTCTime, UTCTime) -> User
+fromRow (uid, usrn, pswd, crat, upat) = User
+    { id         = uid
+    , username   = usrn
+    , password   = pswd
+    , created_at = crat
+    , updated_at = upat
+    }
 
-fromRow :: (Id, Username) -> User
-fromRow (uid, username) = User uid username
-
-authenticateUser :: User -> Text -> forall s. Query s (Maybe AuthenticatedUser)
-authenticateUser (User uid _) p = fmap auth <$> maybeEx [stmt|
-        SELECT id, username
-        FROM users
-        WHERE id = $uid AND crypt($p, password) = password
-    |] where auth = AuthenticatedUser . fromRow
+listUsers :: forall s. Tx Postgres s [User]
+listUsers = fmap fromRow <$> listEx [stmt|
+    SELECT id, username, password, created_at, updated_at
+    FROM users
+|]

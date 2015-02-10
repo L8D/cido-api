@@ -1,12 +1,15 @@
 module Cido.Api (api) where
 
-import Rest.Api
+import Happstack.Server
+import Control.Monad       (msum)
+import Control.Monad.Error (throwError)
 
-import qualified Cido.Types.Server   as S
-import qualified Cido.Resources.User as User
+import Cido.Types
 
-api :: Api S.Api
-api = [(mkVersion 1 0 0, Some1 router)]
+import qualified Cido.Api.User as User
 
-router :: Router S.Api S.Api
-router = root -/ user where user = route User.resource
+api :: Api Response
+api = msum
+    [ dir "users" User.api
+    , throwError NotFound
+    ]
