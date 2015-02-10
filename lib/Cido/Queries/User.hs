@@ -1,6 +1,8 @@
 {-# LANGUAGE QuasiQuotes, RankNTypes, OverloadedStrings #-}
 
-module Cido.Queries.User (findUser) where
+module Cido.Queries.User ( findUser
+                         , listUsers
+                         ) where
 
 import Prelude hiding (id)
 import Data.Functor   ((<$>))
@@ -25,3 +27,9 @@ fromRow (uid, usrn, pswd, crat, upat) = User
     , created_at = crat
     , updated_at = upat
     }
+
+listUsers :: forall s. Tx Postgres s [User]
+listUsers = fmap fromRow <$> listEx [stmt|
+    SELECT id, username, password, created_at, updated_at
+    FROM users
+|]

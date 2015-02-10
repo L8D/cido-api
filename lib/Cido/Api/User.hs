@@ -2,10 +2,12 @@
 
 module Cido.Api.User (api) where
 
+import Prelude hiding (show)
+
 import Control.Monad.Error (throwError)
 import Happstack.Server
 import Control.Monad       (msum)
-import Data.Aeson          (toJSON)
+import Data.Aeson          (ToJSON(..))
 
 import Cido.Types
 import Cido.Types.User
@@ -14,10 +16,21 @@ import Cido.Queries.User
 
 api :: Api Response
 api = msum
-    [ do method GET
-         user <- path $ \u -> nullDir >> getUser u
-         flatten $ return $ toJSON $ user
-    ]
+    [ fix index
+    , fix show
+    ] where fix :: ToJSON a => Api a -> Api Response
+            fix = fmap (toResponse . toJSON)
+
+index :: Api [User]
+index = do
+    method GET
+    nullDir
+    runQuery (listUsers)
+
+show :: Api User
+show = do
+    method GET
+    path $ (nullDir >>) . getUser
 
 getUser :: UserId -> Api User
 getUser uid = runQuery (findUser uid) >>= go where
