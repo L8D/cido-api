@@ -15,8 +15,7 @@ import Cido.Queries.User
 api :: Api Response
 api = msum
     [ do method GET
-         user <- path getUser
-         nullDir
+         user <- path $ \u -> nullDir >> getUser u
          flatten $ return $ toJSON $ user
     ]
 
