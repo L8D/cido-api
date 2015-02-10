@@ -9,19 +9,22 @@ module Cido.Types.User where
 import Happstack.Server.Internal.Types (FromReqURI(..))
 
 import GHC.Generics
+import Data.String  (IsString)
 import Data.Aeson
 import Text.Read    (readMaybe)
 import Data.Time    (UTCTime)
 import Data.Text    (Text)
 import Data.UUID    (UUID)
+import Hasql.Postgres
+import Hasql.Backend
 import Util         ()
 
 newtype UserId   = UserId   { unUserId   :: UUID }
-    deriving (Show, Eq, Ord, Generic, Read)
+    deriving (Show, Eq, Ord, Generic, Read, CxValue Postgres)
 newtype Username = Username { unUsername :: Text }
-    deriving (Show, Eq, Ord, Generic)
+    deriving (Show, Eq, Ord, Generic, IsString, CxValue Postgres)
 newtype Password = Password { unPassword :: Text }
-    deriving (Show, Eq, Ord, Generic)
+    deriving (Show, Eq, Ord, Generic, IsString, CxValue Postgres)
 
 instance ToJSON   UserId
 instance FromJSON UserId

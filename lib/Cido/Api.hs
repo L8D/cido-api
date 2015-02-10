@@ -1,8 +1,12 @@
 module Cido.Api (api) where
 
 import Happstack.Server
-import Control.Monad       (mzero)
+import Control.Monad       (msum)
 import Cido.Types          (Api)
 
+import qualified Cido.Api.User as User
+
 api :: Api Response
-api = mzero
+api = msum
+    [ dir "users" User.api
+    ]

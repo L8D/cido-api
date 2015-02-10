@@ -11,11 +11,11 @@ import Hasql
 import Hasql.Postgres
 
 import Cido.Api              (api)
-import Cido.Types            (unApi)
+import Cido.Types            (Api(..), errorHandler)
 
 handle :: Pool Postgres -> ServerPartT IO Response
-handle p = mapServerPartT run (unApi api) where
-    run x = session p x >>= go
+handle p = mapServerPartT' run (unApi api) where
+    run r x = session p (spUnwrapErrorT errorHandler r x) >>= go
     go (Left e)  = fail $ "postgres error: " ++ show e
     go (Right x) = return x
 
