@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes, RankNTypes, OverloadedStrings #-}
 
-module Cido.Queries.User ( findUser
-                         , listUsers
+module Cido.Queries.User ( findById
+                         , listRange
                          ) where
 
 import Prelude hiding (id)
@@ -12,8 +12,8 @@ import Hasql.Postgres
 
 import Cido.Types.User
 
-findUser :: UserId -> forall s. Tx Postgres s (Maybe User)
-findUser uid = fmap fromRow <$> maybeEx [stmt|
+findById :: UserId -> forall s. Tx Postgres s (Maybe User)
+findById uid = fmap fromRow <$> maybeEx [stmt|
     SELECT id, username, password, created_at, updated_at
     FROM users
     WHERE id = $uid
@@ -28,8 +28,10 @@ fromRow (uid, usrn, pswd, crat, upat) = User
     , updated_at = upat
     }
 
-listUsers :: forall s. Tx Postgres s [User]
-listUsers = fmap fromRow <$> listEx [stmt|
+listRange :: Int -> Int -> forall s. Tx Postgres s [User]
+listRange o l = fmap fromRow <$> listEx [stmt|
     SELECT id, username, password, created_at, updated_at
     FROM users
+    OFFSET $o
+    LIMIT $l
 |]

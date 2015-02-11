@@ -12,7 +12,7 @@ import Data.Aeson          (ToJSON(..))
 import Cido.Types
 import Cido.Types.User
 import Cido.Queries
-import Cido.Queries.User
+import qualified Cido.Queries.User as Q
 
 api :: Api Response
 api = msum
@@ -25,7 +25,7 @@ index :: Api [User]
 index = do
     method GET
     nullDir
-    runQuery (listUsers)
+    runQuery (Q.listRange 0 100)
 
 show :: Api User
 show = do
@@ -33,6 +33,6 @@ show = do
     path $ (nullDir >>) . getUser
 
 getUser :: UserId -> Api User
-getUser uid = runQuery (findUser uid) >>= go where
+getUser uid = runQuery (Q.findById uid) >>= go where
     go Nothing  = throwError NotFound
     go (Just u) = return u
