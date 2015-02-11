@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module Main (main) where
 
 import Data.ByteString.Char8 (pack)
@@ -25,7 +23,7 @@ main = do
 
     settings <- maybe (fail "improper settings") return (poolSettings 6 30)
 
-    pool :: Pool Postgres <- acquirePool postgresSettings settings
+    pool <- acquirePool postgresSettings settings
 
     tid <- forkIO $ simpleHTTP nullConf (handle pool)
 
