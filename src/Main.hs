@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes, OverloadedStrings #-}
+
 module Main (main) where
 
 import Data.ByteString.Char8 (pack)
@@ -17,6 +19,9 @@ handle p = mapServerPartT' run (unApi api) where
     go (Left e)  = fail $ "postgres error: " ++ show e
     go (Right x) = return x
 
+testQuery :: Session Postgres IO ()
+testQuery = tx Nothing $ unitEx [stmt| SELECT null |]
+
 main :: IO ()
 main = do
     postgresSettings <- StringSettings . pack <$> getEnv "DATABASE_URL"
@@ -25,7 +30,11 @@ main = do
 
     pool <- acquirePool postgresSettings settings
 
+    -- test postgres connection
+    session pool testQuery >>= either (error . show) return
+
     tid <- forkIO $ simpleHTTP nullConf (handle pool)
+    putStrLn "listening..."
 
     waitForTermination
     releasePool pool
