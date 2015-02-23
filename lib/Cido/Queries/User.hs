@@ -2,6 +2,7 @@
 
 module Cido.Queries.User ( findById
                          , listRange
+                         , insertNewUser
                          ) where
 
 import Prelude hiding (id)
@@ -11,6 +12,8 @@ import Hasql
 import Hasql.Postgres
 
 import Cido.Types.User
+
+import qualified Cido.Types.NewUser as N
 
 findById :: UserId -> forall s. Tx Postgres s (Maybe User)
 findById uid = fmap fromRow <$> maybeEx [stmt|
@@ -34,4 +37,11 @@ listRange o l = fmap fromRow <$> listEx [stmt|
     FROM users
     OFFSET $o
     LIMIT $l
+|]
+
+insertNewUser :: N.NewUser -> forall s. Tx Postgres s (Maybe User)
+insertNewUser (N.NewUser usrn pswd) = fmap fromRow <$> maybeEx [stmt|
+    INSERT INTO users (username, password)
+    VALUES ($usrn, crypt($pswd, gen_salt('bf', 8)))
+    RETURNING id, username, password, created_at, updated_at
 |]

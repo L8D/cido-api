@@ -6,7 +6,6 @@ import Prelude hiding (show)
 
 import Data.ByteString.Lazy (ByteString)
 import Control.Monad.Error  (throwError)
-import Control.Monad.Trans  (liftIO)
 import Happstack.Server
 import Control.Monad        (msum)
 import Data.Functor         ((<$>))
@@ -14,7 +13,6 @@ import Data.Aeson
 
 import Cido.Types
 import Cido.Types.User
-import Cido.Types.NewUser
 import Cido.Queries
 import qualified Cido.Queries.User as Q
 
@@ -47,7 +45,9 @@ insert = do
 handleUserBody :: ByteString -> Api User
 handleUserBody b = case decode b of
     Nothing -> throwError UnprocessableEntity
-    Just u -> throwError InternalServerError -- TODO
+    Just n  -> runQuery (Q.insertNewUser n) >>= go where
+        go Nothing  = throwError UnprocessableEntity
+        go (Just u) = return u
 
 getUser :: UserId -> Api User
 getUser uid = runQuery (Q.findById uid) >>= go where
