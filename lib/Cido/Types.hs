@@ -37,6 +37,7 @@ errorHandler x = setResponseCode c >> (flatten $ return $ toJSON x)
 data ApiError
     = NotFound
     | InternalServerError
+    | UnprocessableEntity
     | CustomInternalServerError String
 
 instance Error ApiError where
@@ -54,4 +55,5 @@ instance ToJSON ApiError where
 demystify :: ApiError -> (Int, String)
 demystify NotFound                      = (404, "Not Found")
 demystify InternalServerError           = (500, "Internal Server Error")
+demystify UnprocessableEntity           = (422, "Unprocessable Entity")
 demystify (CustomInternalServerError s) = (500, s)

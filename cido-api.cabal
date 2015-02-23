@@ -17,6 +17,7 @@ library
   ghc-options:         -W -Wall
   exposed-modules:     Cido.Types,
                        Cido.Types.User,
+                       Cido.Types.NewUser,
                        Cido.Api,
                        Cido.Api.User,
                        Cido.Queries,
