@@ -7,19 +7,19 @@ import Prelude hiding (show)
 import Control.Monad.Error (throwError)
 import Happstack.Server
 import Control.Monad       (msum)
-import Data.Aeson          (ToJSON(..))
+import Data.Functor        ((<$>))
+import Data.Aeson          (toJSON, Value)
 
 import Cido.Types
 import Cido.Types.User
 import Cido.Queries
 import qualified Cido.Queries.User as Q
 
-api :: Api Response
+api :: Api Value
 api = msum
-    [ fix index
-    , fix show
-    ] where fix :: ToJSON a => Api a -> Api Response
-            fix = fmap (toResponse . toJSON)
+    [ toJSON <$> index
+    , toJSON <$> show
+    ]
 
 index :: Api [User]
 index = do
