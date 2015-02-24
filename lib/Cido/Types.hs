@@ -8,7 +8,7 @@ module Cido.Types ( Api(..)
 
 import Control.Monad.Trans (MonadIO)
 import Control.Monad.Error (ErrorT)
-import Control.Applicative (Applicative)
+import Control.Applicative (Applicative, Alternative)
 import Happstack.Server
 import Control.Monad       (MonadPlus)
 import Data.Aeson
@@ -26,6 +26,7 @@ newtype Api a = Api
              , MonadIO
              , MonadPlus
              , Applicative
+             , Alternative
              , ServerMonad
              , MonadError ApiError
              , HasRqData
