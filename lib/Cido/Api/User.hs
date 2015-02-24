@@ -13,8 +13,7 @@ import Data.Aeson
 
 import Cido.Types
 import Cido.Types.User
-import Cido.Queries
-import qualified Cido.Queries.User as Q
+import Cido.Queries.User
 
 api :: Api Value
 api = msum
@@ -27,29 +26,29 @@ index :: Api [User]
 index = do
     method GET
     nullDir
-    runQuery (Q.listRange 0 100)
+    listUsers
+    -- runQuery (Q.listRange 0 100)
 
 show :: Api User
 show = do
     method GET
-    path $ (nullDir >>) . getUser
+    path $ \uid -> nullDir >> findById uid
 
 insert :: Api User
 insert = do
     method POST
     nullDir
-    askRq
-        >>= takeRequestBody
-        >>= maybe (throwError InternalServerError) (handleUserBody . unBody)
+    askRq >>= takeRequestBody >>= maybe (throwError InternalServerError)
+                                        (handleUserBody . unBody)
 
 handleUserBody :: ByteString -> Api User
 handleUserBody b = case decode b of
     Nothing -> throwError UnprocessableEntity
-    Just n  -> runQuery (Q.insertNewUser n) >>= go where
-        go Nothing  = throwError UnprocessableEntity
-        go (Just u) = return u
+    Just n  -> insertNewUser n
+        -- go Nothing  = throwError UnprocessableEntity
+        -- go (Just u) = return u
 
-getUser :: UserId -> Api User
-getUser uid = runQuery (Q.findById uid) >>= go where
-    go Nothing  = throwError NotFound
-    go (Just u) = return u
+-- getUser :: UserId -> Api User
+-- getUser uid = runQuery (Q.findById uid) >>= go where
+    -- go Nothing  = throwError NotFound
+    -- go (Just u) = return u

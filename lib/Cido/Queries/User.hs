@@ -1,26 +1,36 @@
 {-# LANGUAGE QuasiQuotes, RankNTypes, OverloadedStrings #-}
 
 module Cido.Queries.User ( findById
-                         , listRange
+                         , listUsers
                          , insertNewUser
                          ) where
 
 import Prelude hiding (id)
-import Data.Functor   ((<$>))
-import Data.Time      (UTCTime)
-import Hasql
-import Hasql.Postgres
 
+import Control.Applicative (liftA2)
+import Control.Monad.Error (throwError)
+import Control.Monad       (join)
+import Happstack.Server
+import Data.Functor        ((<$>))
+import Data.Time           (UTCTime)
+import Hasql
+
+import Cido.Types
 import Cido.Types.User
+import Cido.Queries
 
 import qualified Cido.Types.NewUser as N
 
-findById :: UserId -> forall s. Tx Postgres s (Maybe User)
-findById uid = fmap fromRow <$> maybeEx [stmt|
-    SELECT id, username, password, created_at, updated_at
-    FROM users
-    WHERE id = $uid
-|]
+findById :: UserId -> Api User
+findById uid = runQuery (fmap fromRow <$> maybeEx q) >>= go where
+    q = [stmt|
+        SELECT id, username, password, created_at, updated_at
+        FROM users
+        WHERE id = ?
+    |] (unUserId uid)
+
+    go Nothing  = throwError NotFound
+    go (Just u) = return u
 
 fromRow :: (UserId, Username, Password, UTCTime, UTCTime) -> User
 fromRow (uid, usrn, pswd, crat, upat) = User
@@ -31,17 +41,34 @@ fromRow (uid, usrn, pswd, crat, upat) = User
     , updated_at = upat
     }
 
-listRange :: Int -> Int -> forall s. Tx Postgres s [User]
-listRange o l = fmap fromRow <$> listEx [stmt|
+listUsers :: Api [User]
+listUsers = join $ liftA2 listRange getOffset getLimit
+
+getOffset :: Api Int
+getOffset = go <$> queryString (lookReads "offset") where
+    go []    = 0
+    go (x:_) = min x 0
+
+getLimit :: Api Int
+getLimit = go <$> queryString (lookReads "limit") where
+    go []    = 100
+    go (x:_) = max x 100
+
+listRange :: Int -> Int -> Api [User]
+listRange o l = runQuery $ fmap fromRow <$> listEx [stmt|
     SELECT id, username, password, created_at, updated_at
     FROM users
     OFFSET $o
     LIMIT $l
 |]
 
-insertNewUser :: N.NewUser -> forall s. Tx Postgres s (Maybe User)
-insertNewUser (N.NewUser usrn pswd) = fmap fromRow <$> maybeEx [stmt|
-    INSERT INTO users (username, password)
-    VALUES ($usrn, crypt($pswd, gen_salt('bf', 8)))
-    RETURNING id, username, password, created_at, updated_at
-|]
+insertNewUser :: N.NewUser -> Api User
+insertNewUser (N.NewUser n p) = runQuery (fmap fromRow <$> q) >>= go where
+    q = maybeEx $ [stmt|
+        INSERT INTO users (username, password)
+        VALUES (?, crypt(?, gen_salt('bf', 8)))
+        RETURNING id, username, password, created_at, updated_at
+    |] n p
+
+    go Nothing  = throwError UnprocessableEntity
+    go (Just u) = return u

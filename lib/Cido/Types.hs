@@ -28,6 +28,7 @@ newtype Api a = Api
              , Applicative
              , ServerMonad
              , MonadError ApiError
+             , HasRqData
              )
 
 errorHandler :: ApiError -> ServerPartT (Session Postgres IO) Response
