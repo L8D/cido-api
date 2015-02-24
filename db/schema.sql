@@ -28,6 +28,16 @@ CREATE FUNCTION on_record_update() RETURNS trigger AS $$
   END;
 $$ LANGUAGE plpgsql;
 
+CREATE FUNCTION insert_user(addr TEXT, pass TEXT) RETURNS SETOF users AS $$
+  BEGIN
+    RETURN QUERY
+      INSERT INTO users (email, password)
+      VALUES (addr, crypt(pass, gen_salt('bf', 8)))
+      RETURNING id, email, password, created_at, updated_at;
+    EXCEPTION WHEN unique_violation THEN
+  END;
+$$ LANGUAGE plpgsql;
+
 -- the User resource
 
 CREATE TABLE users (

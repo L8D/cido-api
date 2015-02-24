@@ -64,11 +64,7 @@ listRange o l = runQuery $ fmap fromRow <$> listEx [stmt|
 
 insertNewUser :: N.NewUser -> Api User
 insertNewUser (N.NewUser n p) = runQuery (fmap fromRow <$> q) >>= go where
-    q = maybeEx $ [stmt|
-        INSERT INTO users (email, password)
-        VALUES (?, crypt(?, gen_salt('bf', 8)))
-        RETURNING id, email, password, created_at, updated_at
-    |] n p
+    q = maybeEx $ [stmt| SELECT insert_user(?, ?) |] n p
 
-    go Nothing  = throwError UnprocessableEntity
+    go Nothing  = throwError BadRequest
     go (Just u) = return u
