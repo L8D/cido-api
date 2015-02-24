@@ -2,7 +2,9 @@
 
 module Main (main) where
 
+import Happstack.Server.Internal.Monads (ununWebT)
 import Data.ByteString.Char8 (pack)
+import Control.Monad.Trans   (lift)
 import Control.Concurrent    (forkIO, killThread)
 import System.Environment    (getEnv)
 import Data.Functor          ((<$>))
@@ -11,13 +13,13 @@ import Hasql
 import Hasql.Postgres
 
 import Cido.Api              (api)
-import Cido.Types            (Api(..), errorHandler)
+import Cido.Types            (Api(..), errorHandler, ApiError(..))
 
 handle :: Pool Postgres -> ServerPartT IO Response
 handle p = mapServerPartT' run (unApi api) where
-    run r x = session p (spUnwrapErrorT errorHandler r x) >>= go
-    go (Left e)  = fail $ "postgres error: " ++ show e
-    go (Right x) = return x
+    run r x = session p (spUnwrapErrorT (lift . errorHandler) r x) >>= go
+    go = either (ununWebT . errorHandler . CustomInternalServerError . show)
+                return
 
 testQuery :: Session Postgres IO ()
 testQuery = tx Nothing $ unitEx [stmt| SELECT null |]

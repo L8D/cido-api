@@ -32,8 +32,8 @@ newtype Api a = Api
              , HasRqData
              )
 
-errorHandler :: ApiError -> ServerPartT (Session Postgres IO) Response
-errorHandler x = setResponseCode c >> (flatten $ return $ toJSON x)
+errorHandler :: Monad m => ApiError -> m Response
+errorHandler x = setRsCode c $ toResponse $ toJSON x
     where (c, _) = demystify x
 
 data ApiError
