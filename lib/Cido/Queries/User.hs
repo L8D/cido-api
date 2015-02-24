@@ -24,7 +24,7 @@ import qualified Cido.Types.NewUser as N
 findById :: UserId -> Api User
 findById uid = runQuery (fmap fromRow <$> maybeEx q) >>= go where
     q = [stmt|
-        SELECT id, username, password, created_at, updated_at
+        SELECT id, email, password, created_at, updated_at
         FROM users
         WHERE id = ?
     |] (unUserId uid)
@@ -32,10 +32,10 @@ findById uid = runQuery (fmap fromRow <$> maybeEx q) >>= go where
     go Nothing  = throwError NotFound
     go (Just u) = return u
 
-fromRow :: (UserId, Username, Password, UTCTime, UTCTime) -> User
-fromRow (uid, usrn, pswd, crat, upat) = User
+fromRow :: (UserId, EmailAddr, HashedPassword, UTCTime, UTCTime) -> User
+fromRow (uid, emil, pswd, crat, upat) = User
     { id         = uid
-    , username   = usrn
+    , email      = emil
     , password   = pswd
     , created_at = crat
     , updated_at = upat
@@ -56,7 +56,7 @@ getLimit = go <$> queryString (lookReads "limit") where
 
 listRange :: Int -> Int -> Api [User]
 listRange o l = runQuery $ fmap fromRow <$> listEx [stmt|
-    SELECT id, username, password, created_at, updated_at
+    SELECT id, email, password, created_at, updated_at
     FROM users
     OFFSET $o
     LIMIT $l
@@ -65,9 +65,9 @@ listRange o l = runQuery $ fmap fromRow <$> listEx [stmt|
 insertNewUser :: N.NewUser -> Api User
 insertNewUser (N.NewUser n p) = runQuery (fmap fromRow <$> q) >>= go where
     q = maybeEx $ [stmt|
-        INSERT INTO users (username, password)
+        INSERT INTO users (email, password)
         VALUES (?, crypt(?, gen_salt('bf', 8)))
-        RETURNING id, username, password, created_at, updated_at
+        RETURNING id, email, password, created_at, updated_at
     |] n p
 
     go Nothing  = throwError UnprocessableEntity

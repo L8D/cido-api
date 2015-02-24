@@ -12,8 +12,8 @@ import Data.Aeson
 import qualified Cido.Types.User as U
 
 data NewUser = NewUser
-    { username :: U.Username
-    , password :: U.Password
+    { email    :: U.EmailAddr
+    , password :: U.RawPassword
     } deriving (Show, Eq, Ord, Generic)
 
 instance FromJSON NewUser
