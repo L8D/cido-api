@@ -29,7 +29,7 @@ findById uid = runQuery (fmap fromRow <$> maybeEx q) >>= go where
         WHERE id = ?
     |] (unUserId uid)
 
-    go Nothing  = throwError NotFound
+    go Nothing  = throwError (ApiError NotFound Nothing)
     go (Just u) = return u
 
 fromRow :: (UserId, EmailAddr, HashedPassword, UTCTime, UTCTime) -> User
@@ -66,5 +66,5 @@ insertNewUser :: N.NewUser -> Api User
 insertNewUser (N.NewUser n p) = runQuery (fmap fromRow <$> q) >>= go where
     q = maybeEx $ [stmt| SELECT insert_user(?, ?) |] n p
 
-    go Nothing  = throwError BadRequest
+    go Nothing  = throwError (ApiError BadRequest $ Just "Key already exists")
     go (Just u) = return u

@@ -27,7 +27,6 @@ index = do
     method GET
     nullDir
     listUsers
-    -- runQuery (Q.listRange 0 100)
 
 show :: Api User
 show = do
@@ -38,17 +37,11 @@ insert :: Api User
 insert = do
     method POST
     nullDir
-    askRq >>= takeRequestBody >>= maybe (throwError InternalServerError)
+    let err = ApiError InternalServerError Nothing
+    askRq >>= takeRequestBody >>= maybe (throwError err)
                                         (handleUserBody . unBody)
 
 handleUserBody :: ByteString -> Api User
 handleUserBody b = case decode b of
-    Nothing -> throwError UnprocessableEntity
+    Nothing -> throwError (ApiError UnprocessableEntity Nothing) -- TODO
     Just n  -> insertNewUser n
-        -- go Nothing  = throwError UnprocessableEntity
-        -- go (Just u) = return u
-
--- getUser :: UserId -> Api User
--- getUser uid = runQuery (Q.findById uid) >>= go where
-    -- go Nothing  = throwError NotFound
-    -- go (Just u) = return u

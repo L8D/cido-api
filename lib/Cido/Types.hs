@@ -2,12 +2,12 @@
 
 module Cido.Types ( Api(..)
                   , ApiError(..)
-                  , demystify
+                  , HTTPFailure(..)
                   , errorHandler
                   ) where
 
 import Control.Monad.Trans (MonadIO)
-import Control.Monad.Error (ErrorT)
+import Control.Monad.Error (ErrorT, MonadError)
 import Control.Applicative (Applicative, Alternative)
 import Happstack.Server
 import Control.Monad       (MonadPlus)
@@ -17,7 +17,6 @@ import Util                ()
 import Hasql
 import Hasql.Postgres
 import Control.Monad.Trans.Error (Error(..))
-import Control.Monad.Error.Class (MonadError)
 
 newtype Api a = Api
     { unApi :: ServerPartT (ErrorT ApiError (Session Postgres IO)) a }
@@ -33,34 +32,39 @@ newtype Api a = Api
              )
 
 errorHandler :: Monad m => ApiError -> m Response
-errorHandler x = setRsCode c $ toResponse $ toJSON x
-    where (c, _) = demystify x
+errorHandler x@(ApiError f _) = setRsCode c $ toResponse $ toJSON x
+    where c = toResponseCode f
 
-data ApiError
+data ApiError = ApiError HTTPFailure (Maybe String)
+
+data HTTPFailure
     = BadRequest
     | NotFound
-    | InternalServerError
     | UnprocessableEntity
-    | CustomInternalServerError String
+    | InternalServerError
 
 instance Error ApiError where
-    noMsg  = InternalServerError
-    strMsg = CustomInternalServerError
+    noMsg  = ApiError InternalServerError Nothing
+    strMsg = ApiError InternalServerError . Just
 
 instance ToJSON ApiError where
-    toJSON err = object
+    toJSON err@(ApiError f _) = object
         [ "error" .= object
-            [ "code" .= code
-            , "message" .= pack message
+            [ "code" .= toResponseCode f
+            , "message" .= pack (toErrorMessage err)
             ]
-        ] where (code, message) = demystify err
+        ]
 
-demystify :: ApiError -> (Int, String)
-demystify BadRequest                    = (400, "Bad Request")
-demystify NotFound                      = (404, "Not Found")
-demystify InternalServerError           = (500, "Internal Server Error")
-demystify UnprocessableEntity           = (422, "Unprocessable Entity")
-demystify (CustomInternalServerError s) = (500, s)
+toResponseCode :: HTTPFailure -> Int
+toResponseCode BadRequest          = 400
+toResponseCode NotFound            = 404
+toResponseCode UnprocessableEntity = 422
+toResponseCode InternalServerError = 500
 
-instance Show ApiError where
-    show e = show c ++ " " ++ m where (c, m) = demystify e
+toErrorMessage :: ApiError -> String
+toErrorMessage (ApiError e Nothing) = case e of
+    BadRequest          -> "Bad Request"
+    NotFound            -> "Not Found"
+    InternalServerError -> "Internal Server Error"
+    UnprocessableEntity -> "Unprocessable Entity"
+toErrorMessage (ApiError _ (Just s)) = s

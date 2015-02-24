@@ -11,5 +11,5 @@ import qualified Cido.Api.User as User
 api :: Api Response
 api = fmap toResponse $ msum
     [ dir "users" User.api
-    , throwError NotFound
+    , throwError $ ApiError NotFound Nothing
     ]

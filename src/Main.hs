@@ -4,6 +4,7 @@ module Main (main) where
 
 import Happstack.Server.Internal.Monads (ununWebT)
 import Data.ByteString.Char8 (pack)
+import Control.Monad.Error   (strMsg)
 import Control.Monad.Trans   (lift)
 import Control.Concurrent    (forkIO, killThread)
 import System.Environment    (getEnv)
@@ -13,12 +14,12 @@ import Hasql
 import Hasql.Postgres
 
 import Cido.Api              (api)
-import Cido.Types            (Api(..), errorHandler, ApiError(..))
+import Cido.Types            (Api(..), errorHandler)
 
 handle :: Pool Postgres -> ServerPartT IO Response
 handle p = mapServerPartT' run (unApi api) where
     run r x = session p (spUnwrapErrorT (lift . errorHandler) r x) >>= go
-    go = either (ununWebT . errorHandler . CustomInternalServerError . show)
+    go = either (ununWebT . errorHandler . strMsg . show)
                 return
 
 testQuery :: Session Postgres IO ()
